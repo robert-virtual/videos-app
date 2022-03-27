@@ -37,7 +37,11 @@ export function StackMenu() {
         name="Home"
         component={Home}
       />
-      <Stack.Screen name="Crear" component={Crear} />
+      <Stack.Screen
+        options={{ headerTransparent: true }}
+        name="Crear"
+        component={Crear}
+      />
       <Stack.Screen name="Video" component={VideoPage} />
     </Stack.Navigator>
   );

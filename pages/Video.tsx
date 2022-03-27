@@ -8,6 +8,7 @@ import {
   Button,
   ActivityIndicator,
 } from "react-native";
+import { api_url } from "../constantes";
 import { PageProps } from "../routes";
 
 export function VideoPage({ route }: PageProps<"Video">) {
@@ -33,7 +34,7 @@ export function VideoPage({ route }: PageProps<"Video">) {
 
     try {
       setCargando(true);
-      const res = await fetch("http://192.168.0.30:3000/videos", {
+      const res = await fetch(api_url + "/videos", {
         method: "post",
         body,
         headers: {

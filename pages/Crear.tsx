@@ -4,16 +4,15 @@ import {
   View,
   ActivityIndicator,
   TouchableOpacity,
-  TextInput,
   Button,
   StatusBar,
+  useWindowDimensions,
 } from "react-native";
 import { Camera } from "expo-camera";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
 import { PageProps } from "../routes";
 import { VideoCodec } from "expo-camera/build/Camera.types";
-import { Video } from "expo-av";
 
 declare global {
   interface FormData {
@@ -27,7 +26,8 @@ export interface IVideo {
 }
 
 export function Crear({ navigation }: PageProps<"Crear">) {
-  const [CameraType, setCameraType] = useState<"back" | "front">();
+  const { width } = useWindowDimensions();
+  const [CameraType, setCameraType] = useState<"back" | "front">("back");
   const [cargando, setCargando] = useState(true);
   const [granted, setGranted] = useState(false);
   const cameraRef = useRef<Camera>(null);
@@ -40,8 +40,14 @@ export function Crear({ navigation }: PageProps<"Crear">) {
     cameraRef.current?.stopRecording();
   }
   useEffect(() => {
+    console.log(video);
+
     if (video) {
       navigation.navigate("Video", { video: video });
+      setVideo(undefined);
+    }
+    if (!video) {
+      cameraRef.current?.resumePreview();
     }
   }, [video]);
 
@@ -53,31 +59,24 @@ export function Crear({ navigation }: PageProps<"Crear">) {
     setVideo(res);
   }
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerTransparent: true,
-      headerTintColor: "white",
-      headerRight: () => (
-        <TouchableOpacity
-          onPress={() => {
-            // cambiera a camara frontal o tracera
-            setCameraType(CameraType == "back" ? "front" : "back");
-          }}
-        >
-          <MaterialIcons name="flip-camera-android" size={24} color="white" />
-        </TouchableOpacity>
-      ),
-    });
+  useEffect(() => {
+    solicitarPermisos();
   }, []);
 
-  useEffect(() => {
-    Camera.requestCameraPermissionsAsync().then((status) => {
-      Camera.requestMicrophonePermissionsAsync().then((status2) => {
-        setGranted(status2.granted);
-        setCargando(false);
-      });
-    });
-  }, []);
+  async function solicitarPermisos() {
+    let camerapermission = await Camera.getCameraPermissionsAsync();
+    let audioPermission = await Camera.getMicrophonePermissionsAsync();
+
+    if (!audioPermission.granted) {
+      camerapermission = await Camera.requestCameraPermissionsAsync();
+    }
+
+    if (!camerapermission.granted) {
+      audioPermission = await Camera.requestMicrophonePermissionsAsync();
+    }
+    setGranted(camerapermission.granted && audioPermission.granted);
+    setCargando(false);
+  }
 
   if (cargando) {
     return (
@@ -86,34 +85,61 @@ export function Crear({ navigation }: PageProps<"Crear">) {
       </View>
     );
   }
-  return (
+  if (!granted) {
     <View style={styles.container}>
+      <Text>Debe proporcionar permisos para usar el microfono y la camara</Text>
+      <Button title="Volver a Solicitar " onPress={solicitarPermisos} />
+    </View>;
+  }
+  return (
+    <View style={{ flex: 1, backgroundColor: "black" }}>
       <Camera
+        ratio="16:9"
         ref={cameraRef}
-        style={{ flex: 1, height: "100%", width: "100%" }}
+        style={{ height: (width / 9) * 16, width: "100%" }}
         type={CameraType}
+      />
+      <View
+        style={{
+          position: "absolute",
+          bottom: 25,
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
       >
-        <View
+        <TouchableOpacity
+          onLongPress={grabar}
+          onPressOut={detenerGrabacion}
           style={{
-            position: "absolute",
-            bottom: 25,
-            width: "100%",
-            justifyContent: "center",
-            alignItems: "center",
+            width: 75,
+            height: 75,
+            borderRadius: 37,
+            backgroundColor: "white",
           }}
-        >
-          <TouchableOpacity
-            onLongPress={grabar}
-            onPressOut={detenerGrabacion}
-            style={{
-              width: 75,
-              height: 75,
-              borderRadius: 37,
-              backgroundColor: "white",
-            }}
-          ></TouchableOpacity>
-        </View>
-      </Camera>
+        ></TouchableOpacity>
+      </View>
+      <TouchableOpacity
+        style={{
+          width: 75,
+          height: 75,
+          justifyContent: "center",
+          alignItems: "center",
+          position: "absolute",
+          bottom: 25,
+          right: 25,
+        }}
+        onPress={() => {
+          // cambiera a camara frontal o tracera
+          setCameraType((prev) => {
+            console.log(prev);
+
+            return prev == "back" ? "front" : "back";
+          });
+        }}
+      >
+        <MaterialIcons name="flip-camera-android" size={24} color="white" />
+      </TouchableOpacity>
       <StatusBar barStyle={"light-content"} />
     </View>
   );
