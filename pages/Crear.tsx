@@ -43,7 +43,7 @@ export function Crear({ navigation }: PageProps<"Crear">) {
     console.log(video);
 
     if (video) {
-      navigation.navigate("Video", { video: video });
+      navigation.replace("Video", { video: video });
       setVideo(undefined);
     }
     if (!video) {

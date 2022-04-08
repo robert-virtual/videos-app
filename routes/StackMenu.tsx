@@ -2,15 +2,14 @@ import {
   createNativeStackNavigator,
   NativeStackNavigationProp,
 } from "@react-navigation/native-stack";
-import { Crear, Home, IVideo, VideoPage } from "../pages";
-import { Entypo } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native";
+import { Crear, IVideo, VideoPage } from "../pages";
 import { RouteProp } from "@react-navigation/native";
+import { BottomTabs } from "./BottomTabs";
 
 export type Pages = {
-  Home: undefined;
   Crear: undefined;
   Video: { video: IVideo };
+  BottomTabs: undefined;
 };
 export type PageProps<T extends keyof Pages> = {
   navigation: NativeStackNavigationProp<Pages, T>;
@@ -23,20 +22,11 @@ export function StackMenu() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        options={({ navigation }) => ({
-          headerStyle: {
-            backgroundColor: "black",
-          },
-          headerTintColor: "white",
-          headerRight: () => (
-            <TouchableOpacity onPress={() => navigation.navigate("Crear")}>
-              <Entypo name="camera" size={24} color="white" />
-            </TouchableOpacity>
-          ),
-        })}
-        name="Home"
-        component={Home}
+        options={{ headerShown: false }}
+        name="BottomTabs"
+        component={BottomTabs}
       />
+
       <Stack.Screen
         options={{ headerTransparent: true }}
         name="Crear"

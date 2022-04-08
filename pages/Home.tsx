@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
+import { IOScrollView } from "react-native-intersection-observer";
+
 import {
   StyleSheet,
   StatusBar,
   FlatList,
   useWindowDimensions,
-  View,
-  Text,
 } from "react-native";
 import { VideoItem } from "../components";
 import { api_url } from "../constantes";
@@ -29,37 +29,30 @@ export function Home() {
   }, []);
   async function fetchVideos() {
     try {
+      setCargando(true);
       const res = await fetch(api_url + "/videos");
 
       let data = await res.json();
-      console.log(data);
       setVideos(data);
     } catch (error) {
       console.warn(error);
     }
     setCargando(false);
   }
-  if (!cargando && !videos.length) {
-    return (
-      <View style={styles.container}>
-        <Text>Aun no hay videos</Text>
-      </View>
-    );
-  }
+
   return (
     <>
-      <FlatList
-        data={videos}
-        onRefresh={fetchVideos}
-        refreshing={cargando}
-        snapToInterval={height * 0.94}
+      <IOScrollView
+        snapToInterval={height * 0.9}
         snapToAlignment={"start"}
         decelerationRate={"normal"}
         style={{ flex: 1, backgroundColor: "#ffff" }}
         contentContainerStyle={{ backgroundColor: "black" }}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <VideoItem item={item} />}
-      />
+      >
+        {videos.map((v) => (
+          <VideoItem key={v.id} item={v} />
+        ))}
+      </IOScrollView>
       <StatusBar barStyle={"light-content"} />
     </>
   );
